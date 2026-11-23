@@ -1,0 +1,25 @@
+Projet de test créé : projets/test-mesure-1795191599
+Jeu d'essai déposé dans 0_Entrants/
+
+=== P1 : pré-analyse ===
+  code=0 durée=302.8s coût=0.05125456 USD outcome=finished
+
+=== P2 : intégration des réponses ===
+  code=0 durée=335.4s coût=0.04458062 USD outcome=finished
+
+=== P3 : création de l'espace ===
+  code=0 durée=1312.2s coût=0.2342389 USD outcome=finished
+
+==================================================
+RAPPORT DE MESURE
+==================================================
+  P1_pre_analyse         302.8s  0.0513 USD  code=0  finished
+  P2_integration         335.4s  0.0446 USD  code=0  finished
+  P3_creation           1312.2s  0.2342 USD  code=0  finished
+--------------------------------------------------
+  TOTAL                 1950.4s  0.3301 USD
+==================================================
+Rapport sauvegardé : tests\rapport_mesure_test-mesure-1795191599.json
+
+Validation de l'état final : code=0
+OK : état valide

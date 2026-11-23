@@ -1,0 +1,28 @@
+{
+  "projet": "test-mesure-1795191599",
+  "etapes": [
+    {
+      "etape": "P1_pre_analyse",
+      "code": 0,
+      "duree_s": 302.8,
+      "cost_usd": 0.05125456,
+      "outcome": "finished"
+    },
+    {
+      "etape": "P2_integration",
+      "code": 0,
+      "duree_s": 335.4,
+      "cost_usd": 0.04458062,
+      "outcome": "finished"
+    },
+    {
+      "etape": "P3_creation",
+      "code": 0,
+      "duree_s": 1312.2,
+      "cost_usd": 0.2342389,
+      "outcome": "finished"
+    }
+  ],
+  "total_duree_s": 1950.4,
+  "total_cout_usd": 0.3301
+}
