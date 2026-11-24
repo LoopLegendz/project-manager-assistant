@@ -1,0 +1,155 @@
+{
+  "_commentaire": "Schéma machine des formats d'état. Lu par valider_etat.py. Ne pas modifier la structure sans mettre à jour le validateur.",
+  "champs_communs_elements": ["id", "origine", "audience", "liens"],
+  "enumerations": {
+    "audience": ["perso", "projet", "direction", "public"],
+    "statut_question": ["ouverte", "repondue", "abandonnee"],
+    "statut_decision": ["proposee", "prise", "remplacee"],
+    "statut_action": ["a_faire", "en_cours", "faite", "abandonnee"],
+    "statut_risque": ["ouvert", "maitrise", "clos"],
+    "statut_dependance": ["ouverte", "levee"],
+    "statut_jalon": ["prevu", "atteint", "decale"],
+    "statut_reunion": ["a_planifier", "planifiee", "tenue", "annulee"],
+    "statut_sujet": ["a_instruire", "instruit"],
+    "statut_fait": ["actif", "remplace"],
+    "statut_hypothese": ["a_confirmer", "confirmee", "infirmee"],
+    "probabilite": ["faible", "moyenne", "forte"],
+    "impact": ["faible", "moyen", "fort"],
+    "format_reponse": ["texte", "date", "liste", "oui_non"]
+  },
+  "id_patterns": {
+    "Q":   {"regex": "^Q-\\d{3}$",  "serie": "questions",   "fichier": "etat/registre.json"},
+    "D":   {"regex": "^D-\\d{3}$",  "serie": "decisions",   "fichier": "etat/registre.json"},
+    "A":   {"regex": "^A-\\d{3}$",  "serie": "actions",     "fichier": "etat/registre.json"},
+    "R":   {"regex": "^R-\\d{2}$",  "serie": "risques",     "fichier": "etat/registre.json"},
+    "DEP": {"regex": "^DEP-\\d{2}$", "serie": "dependances", "fichier": "etat/registre.json"},
+    "F":   {"regex": "^F-\\d{3}$",  "serie": "faits",       "fichier": "etat/faits.json"},
+    "J":   {"regex": "^J-\\d{2}$",  "serie": "jalons",      "fichier": "etat/planning.json"},
+    "REU": {"regex": "^REU-\\d{2}$", "serie": "reunions",   "fichier": "etat/reunions.json"},
+    "H":   {"regex": "^H-\\d{2}$",  "serie": "hypotheses",  "fichier": "etat/projet.json"},
+    "S":   {"regex": "^S-\\d{2}$",  "serie": "sujets",      "fichier": "etat/sujets.json"}
+  },
+  "fichiers_etat": {
+    "etat/projet.json": {
+      "structure": {
+        "nom": "string", "code": "string", "objet": "string",
+        "commanditaire": "string", "chef_de_projet": "string",
+        "echeance_principale": "date",
+        "perimetre_inclus": ["string"], "perimetre_exclu": ["string"],
+        "parties_prenantes": [{
+          "nom": "string", "role": "string", "organisation": "string",
+          "origine": "string", "audience": "audience"
+        }],
+        "hypotheses": [{
+          "id": "id:H", "texte": "string", "statut": "statut_hypothese",
+          "origine": "string", "audience": "audience", "liens": ["id"]
+        }]
+      }
+    },
+    "etat/faits.json": {
+      "structure": {
+        "faits": [{
+          "id": "id:F", "texte": "string", "origine": "string",
+          "date_origine": "date",
+          "statut": "statut_fait", "remplace_le": "id|null", "remplace_par": "id|null",
+          "themes": ["string"], "audience": "audience", "liens": ["id"]
+        }]
+      }
+    },
+    "etat/registre.json": {
+      "structure": {
+        "questions": [{
+          "id": "id:Q", "intitule": "string", "posee_a": "string",
+          "statut": "statut_question", "reponse": "string",
+          "date_ouverture": "date", "date_reponse": "date|null",
+          "echeance": "date|null", "origine": "string", "audience": "audience", "liens": ["id"]
+        }],
+        "decisions": [{
+          "id": "id:D", "intitule": "string", "decideur": "string",
+          "date": "date", "statut": "statut_decision",
+          "origine": "string", "audience": "audience", "liens": ["id"]
+        }],
+        "actions": [{
+          "id": "id:A", "intitule": "string", "porteur": "string",
+          "echeance": "date", "statut": "statut_action",
+          "date_cloture": "date|null", "origine": "string", "audience": "audience", "liens": ["id"]
+        }],
+        "risques": [{
+          "id": "id:R", "intitule": "string",
+          "probabilite": "probabilite", "impact": "impact",
+          "parade": "string", "statut": "statut_risque",
+          "origine": "string", "audience": "audience", "liens": ["id"]
+        }],
+        "dependances": [{
+          "id": "id:DEP", "intitule": "string", "envers": "string",
+          "echeance": "date|null", "statut": "statut_dependance",
+          "origine": "string", "audience": "audience", "liens": ["id"]
+        }]
+      }
+    },
+    "etat/planning.json": {
+      "structure": {
+        "jalons": [{
+          "id": "id:J", "intitule": "string", "date": "date",
+          "statut": "statut_jalon", "historique": ["date"],
+          "origine": "string", "audience": "audience", "liens": ["id"]
+        }]
+      }
+    },
+    "etat/reunions.json": {
+      "structure": {
+        "reunions": [{
+          "id": "id:REU", "intitule": "string", "date": "date|null",
+          "statut": "statut_reunion", "participants": ["string"],
+          "objectif": "string", "ordre_du_jour": ["string"],
+          "compte_rendu": "string|null",
+          "origine": "string", "audience": "audience", "liens": ["id"]
+        }]
+      }
+    },
+    "etat/sujets.json": {
+      "structure": {
+        "sujets": [{
+          "id": "id:S", "chantier": "string", "intitule": "string",
+          "a_savoir_avant_decision": ["string"], "criteres_de_choix": ["string"],
+          "statut": "statut_sujet",
+          "origine": "string", "audience": "audience", "liens": ["id"]
+        }]
+      }
+    }
+  },
+  "pre_analyse": {
+    "fichier": "_amorcage/pre_analyse.json",
+    "structure": {
+      "tour": "int",
+      "projet": {
+        "nom_propose": "string", "code_propose": "string", "objet": "string",
+        "commanditaire": "string", "chef_de_projet": "string",
+        "echeance_principale": "date", 
+        "perimetre_inclus": ["string"], "perimetre_exclu": ["string"]
+      },
+      "documents_analyses": [{
+        "fichier": "string", "nature": "string", "resume": "string", "audience_suggeree": "audience"
+      }],
+      "parties_prenantes": [{
+        "nom": "string", "role": "string", "origine": "string"
+      }],
+      "faits_identifies": [{
+        "texte": "string", "origine": "string"
+      }],
+      "lacunes": [{
+        "id": "string", "rubrique": "string", "description": "string", "bloquante": "bool",
+        "hypothese": "string"
+      }],
+      "questions": [{
+        "id": "string", "lacune": "string", "question": "string",
+        "pourquoi": "string", "format_reponse": "format_reponse",
+        "proposition_par_defaut": "string"
+      }],
+      "pret_pour_creation": "bool"
+    },
+    "regles_speciales": [
+      "pret_pour_creation == true ssi aucune lacune bloquante"
+    ]
+  }
+}
