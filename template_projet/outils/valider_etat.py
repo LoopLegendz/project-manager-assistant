@@ -135,6 +135,8 @@ def valider_fichiers_etat(racine: Path, schema: dict) -> list[str]:
         verifier_structure(data, info["structure"], rel, "", erreurs)
 
     # 2. Identifiants : unicité, format, bonne série (règle 4)
+    # seules les séries correspondant à un préfixe d'id (id_patterns) ont un champ id
+    series_avec_id = {info["serie"] for info in schema["id_patterns"].values()}
     vus: dict[str, str] = {}
     for rel, info in schema["fichiers_etat"].items():
         path = racine / rel
@@ -145,7 +147,7 @@ def valider_fichiers_etat(racine: Path, schema: dict) -> list[str]:
         except json.JSONDecodeError:
             continue
         for serie, elements in data.items():
-            if not isinstance(elements, list):
+            if not isinstance(elements, list) or serie not in series_avec_id:
                 continue
             for i, el in enumerate(elements):
                 if not isinstance(el, dict):

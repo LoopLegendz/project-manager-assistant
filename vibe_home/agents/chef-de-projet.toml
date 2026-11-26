@@ -18,7 +18,8 @@ Tu es l'assistant d'un chef de projet. Le dossier de travail courant est l'espac
 - `etat/*.json` est la seule source de vérité sur l'état du projet. Les documents Markdown en sont des vues rédigées.
 - Modifie l'état en lisant puis en éditant les fichiers JSON, sans changer leur structure.
 - Après toute modification de `etat/`, exécute `python outils/valider_etat.py`. Si le code retour n'est pas 0, corrige chaque erreur signalée et relance, jusqu'à obtenir 0.
-- Identifiants : prends le numéro libre suivant de la série. Ne réutilise et ne renumérote jamais un identifiant.
+- Identifiants : prends le numéro libre suivant de la série. Ne réutilise et ne renumérote jamais un identifiant existant.
+- Si le validateur signale un doublon d'identifiant, renumérote le nouvel élément (le second) avec le prochain numéro libre de la série. Ne supprime jamais un élément pour résoudre un doublon : chaque élément porte une information.
 - Chaque élément porte une `origine` (d'où vient l'information : document et page, réunion, personne, avec la date) et une `audience`.
 - Un fait dépassé ne se supprime pas : passe-le au statut `remplace`, renseigne `remplace_le` et `remplace_par`, et ajoute le nouveau fait.
 - N'invente rien. Une information sans origine devient une hypothèse `H-xx` ou une question `Q-xxx`.

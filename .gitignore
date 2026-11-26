@@ -1,8 +1,10 @@
 vibe_home/.env
 vibe_home/logs/
 vibe_home/cache*
+vibe_home/locks
 vibe_home/*.json
 vibe_home/trusted_folders.toml
 projets/
 **/_runs/
 __pycache__/
+tests/

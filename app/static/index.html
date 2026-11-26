@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Assistant chef de projet</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <h1>Assistant chef de projet</h1>
+  </header>
+  <main>
+    <div class="carte">
+      <h2>Nouveau projet</h2>
+      <form id="form-creation">
+        <label for="nom">Nom du projet</label>
+        <input type="text" id="nom" name="nom" required placeholder="Migration de la messagerie">
+        <label for="description">Décrivez votre projet</label>
+        <textarea id="description" name="description" required
+          placeholder="Objet, contexte, échéance, parties prenantes... tout ce que vous savez déjà."></textarea>
+        <label for="fichiers">Documents (Word, PDF, PowerPoint, texte, Markdown)</label>
+        <input type="file" id="fichiers" name="fichiers" multiple>
+        <button type="submit" id="btn-creer">Lancer l'analyse</button>
+      </form>
+      <div id="statut-creation"></div>
+    </div>
+    <div class="carte">
+      <h2>Vos projets</h2>
+      <ul class="projet-liste" id="liste-projets"></ul>
+    </div>
+  </main>
+  <script>
+    async function chargerProjets() {
+      const r = await fetch('/api/projets');
+      const data = await r.json();
+      const ul = document.getElementById('liste-projets');
+      ul.innerHTML = '';
+      if (!data.projets.length) {
+        ul.innerHTML = '<li><span class="cout">Aucun projet pour l\'instant.</span></li>';
+        return;
+      }
+      for (const p of data.projets) {
+        const li = document.createElement('li');
+        li.innerHTML = `<a href="/projet/${p.id}">${p.nom || p.id}</a> <span class="badge">${p.etape}</span>`;
+        ul.appendChild(li);
+      }
+    }
+
+    document.getElementById('form-creation').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('btn-creer');
+      const statut = document.getElementById('statut-creation');
+      btn.disabled = true;
+      statut.innerHTML = '<div class="spinner">Pré-analyse en cours (cela peut prendre quelques minutes)...</div>';
+      const fd = new FormData();
+      fd.append('nom', document.getElementById('nom').value);
+      fd.append('description', document.getElementById('description').value);
+      for (const f of document.getElementById('fichiers').files) fd.append('fichiers', f);
+      try {
+        const r = await fetch('/api/projets', { method: 'POST', body: fd });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.detail || r.statusText);
+        window.location.href = '/projet/' + data.id;
+      } catch (err) {
+        statut.innerHTML = `<div class="erreur">${err.message}</div>`;
+        btn.disabled = false;
+      }
+    });
+
+    chargerProjets();
+  </script>
+</body>
+</html>

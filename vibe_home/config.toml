@@ -1,5 +1,5 @@
 active_model = "mistral-large-4-0"
-default_agent = "chef-de-projet" 
+default_agent = "chef-de-projet"
 outside_workdir = "deny"
 enable_subagents = false
 enable_auto_update = false
@@ -7,3 +7,6 @@ enable_auto_approve = false
 enable_update_checks = false
 enable_telemetry = false
 include_commit_signature = false
+models = [
+    { thinking = "medium", alias = "mistral-large-4-0" },
+]

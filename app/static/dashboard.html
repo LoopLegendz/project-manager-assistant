@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tableau de bord — Assistant chef de projet</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    .synthese { display: flex; gap: 12px; flex-wrap: wrap; }
+    .carte-synthese { background: #eef2f7; border-radius: 8px; padding: 10px 16px; text-align: center; min-width: 110px; }
+    .carte-synthese .n { font-size: 22px; font-weight: 700; color: var(--accent-fonce); }
+    .carte-synthese .l { font-size: 12px; color: var(--gris); }
+    .onglets { display: flex; gap: 4px; flex-wrap: wrap; margin: 16px 0; }
+    .onglets button { background: #eef1f5; color: var(--texte); margin: 0; padding: 6px 12px; font-size: 13px; border-radius: 6px 6px 0 0; }
+    .onglets button.actif { background: var(--accent); color: #fff; }
+    .filtres { margin-left: auto; display: flex; gap: 4px; align-items: center; }
+    .filtres button { padding: 4px 10px; font-size: 12px; margin: 0; background: #eef1f5; color: var(--texte); }
+    .filtres button.actif { background: #6b7280; color: #fff; }
+    .element { border: 1px solid var(--bord); border-radius: 6px; padding: 10px 14px; margin-bottom: 8px; background: #fff; }
+    .element .eid { font-weight: 700; color: var(--accent); cursor: pointer; }
+    .element .emeta { font-size: 12px; color: var(--gris); margin-top: 4px; }
+    .element.surligne { background: #fff3bf; }
+    .badge-aud { font-size: 11px; border: 1px solid var(--bord); border-radius: 8px; padding: 1px 8px; margin-left: 6px; color: var(--gris); }
+    table.docs { border-collapse: collapse; width: 100%; font-size: 13px; }
+    table.docs td, table.docs th { border-bottom: 1px solid var(--bord); padding: 6px 8px; text-align: left; }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="/">&larr; Accueil</a>
+    <a id="lien-projet" href="#">Projet</a>
+    <h1 id="titre">Tableau de bord</h1>
+    <button id="btn-rafraichir" style="margin:0 0 0 auto">Rafraîchir</button>
+  </header>
+  <main>
+    <div class="carte">
+      <h2>Synthèse</h2>
+      <div class="synthese" id="synthese"></div>
+    </div>
+    <div class="carte">
+      <div class="onglets" id="onglets">
+        <button data-onglet="questions" class="actif">Questions</button>
+        <button data-onglet="decisions">Décisions</button>
+        <button data-onglet="actions">Actions</button>
+        <button data-onglet="risques">Risques</button>
+        <button data-onglet="dependances">Dépendances</button>
+        <button data-onglet="faits">Faits</button>
+        <button data-onglet="jalons">Planning</button>
+        <button data-onglet="reunions">Réunions</button>
+        <button data-onglet="sujets">Sujets</button>
+        <button data-onglet="documents">Documents</button>
+        <span class="filtres">
+          <span style="font-size:12px;color:var(--gris)">Audience :</span>
+          <button data-aud="tout" class="actif">tout</button>
+          <button data-aud="perso">perso</button>
+          <button data-aud="projet">projet</button>
+          <button data-aud="direction">direction</button>
+          <button data-aud="public">public</button>
+        </span>
+      </div>
+      <div id="contenu"></div>
+    </div>
+  </main>
+  <script>
+    const idProjet = window.location.pathname.split('/')[2];
+    let ETAT = {}, DOCS = {}, ongletActif = 'questions', audience = 'tout';
+    const AUJOURDHUI = new Date().toISOString().slice(0, 10);
+
+    document.getElementById('lien-projet').href = '/projet/' + idProjet;
+    document.getElementById('btn-rafraichir').addEventListener('click', charger);
+
+    function ech(s) {
+      const e = document.createElement('span');
+      e.textContent = s == null ? '' : String(s);
+      return e.innerHTML;
+    }
+    function liens(texte) {
+      return ech(texte).replace(/\b(Q|D|A|R|DEP|J|REU|F|H|S)-(\d+)\b/g,
+        (m, p, n) => `<a class="eid" href="#" data-id="${p}-${n}" onclick="voirId('${p}-${n}');return false">${p}-${n}</a>`);
+    }
+    function badgeAud(a) { return `<span class="badge-aud">${ech(a || '')}</span>`; }
+
+    async function charger() {
+      const [rEtat, rDocs, rInfo] = await Promise.all([
+        fetch('/api/projets/' + idProjet + '/etat'),
+        fetch('/api/projets/' + idProjet + '/documents'),
+        fetch('/api/projets/' + idProjet)
+      ]);
+      ETAT = await rEtat.json();
+      DOCS = await rDocs.json();
+      const info = await rInfo.json();
+      document.getElementById('titre').textContent = 'Tableau de bord — ' + (info.nom || idProjet);
+      rendreSynthese();
+      rendreOnglet();
+    }
+
+    function rendreSynthese() {
+      const reg = ETAT.registre || {};
+      const qOuvertes = (reg.questions || []).filter(q => q.statut === 'ouverte').length;
+      const aRetard = (reg.actions || []).filter(a => a.statut !== 'faite' && a.statut !== 'abandonnee' && a.echeance && a.echeance < AUJOURDHUI).length;
+      const rOuverts = (reg.risques || []).filter(r => r.statut === 'ouvert').length;
+      const jalons = (ETAT.planning || {}).jalons || [];
+      const prochain = jalons.filter(j => j.statut === 'prevu' && j.date).sort((a, b) => a.date.localeCompare(b.date))[0];
+      const reunions = (ETAT.reunions || {}).reunions || [];
+      const prochaine = reunions.filter(r => (r.statut === 'planifiee' || r.statut === 'a_planifier') && r.date).sort((a, b) => a.date.localeCompare(b.date))[0];
+      document.getElementById('synthese').innerHTML = [
+        [qOuvertes, 'questions ouvertes'],
+        [aRetard, 'actions en retard'],
+        [rOuverts, 'risques ouverts'],
+        [prochain ? prochain.date : '—', 'prochain jalon' + (prochain ? ' (' + prochain.id + ')' : '')],
+        [prochaine ? prochaine.date : '—', 'prochaine réunion' + (prochaine ? ' (' + prochaine.id + ')' : '')],
+      ].map(([n, l]) => `<div class="carte-synthese"><div class="n">${ech(n)}</div><div class="l">${ech(l)}</div></div>`).join('');
+    }
+
+    function visible(el) {
+      return audience === 'tout' || el.audience === audience;
+    }
+
+    function elementHtml(el, champs) {
+      const meta = champs.map(c => `${c.label}: ${ech(el[c.cle] ?? '')}`).filter(s => !s.endsWith(': ')).join(' · ');
+      return `<div class="element" id="el-${ech(el.id)}">
+        <div><a class="eid" href="#" onclick="voirId('${ech(el.id)}');return false">${ech(el.id)}</a>${badgeAud(el.audience)}
+        <span style="font-size:13px"> — ${liens(el.intitule || el.texte || '')}</span></div>
+        ${meta ? `<div class="emeta">${meta}</div>` : ''}
+      </div>`;
+    }
+
+    function rendreOnglet() {
+      const c = document.getElementById('contenu');
+      const reg = ETAT.registre || {};
+      const config = {
+        questions:   [(reg.questions || []), [{cle: 'statut', label: 'statut'}, {cle: 'posee_a', label: 'posée à'}, {cle: 'echeance', label: 'échéance'}]],
+        decisions:   [(reg.decisions || []), [{cle: 'statut', label: 'statut'}, {cle: 'decideur', label: 'décideur'}, {cle: 'date', label: 'date'}]],
+        actions:     [(reg.actions || []), [{cle: 'statut', label: 'statut'}, {cle: 'porteur', label: 'porteur'}, {cle: 'echeance', label: 'échéance'}]],
+        risques:     [(reg.risques || []), [{cle: 'statut', label: 'statut'}, {cle: 'probabilite', label: 'proba'}, {cle: 'impact', label: 'impact'}]],
+        dependances: [(reg.dependances || []), [{cle: 'statut', label: 'statut'}, {cle: 'envers', label: 'envers'}]],
+        faits:       [(ETAT.faits || {}).faits || [], [{cle: 'statut', label: 'statut'}, {cle: 'date_origine', label: 'date'}]],
+        jalons:      [(ETAT.planning || {}).jalons || [], [{cle: 'statut', label: 'statut'}, {cle: 'date', label: 'date'}]],
+        reunions:    [(ETAT.reunions || {}).reunions || [], [{cle: 'statut', label: 'statut'}, {cle: 'date', label: 'date'}]],
+        sujets:      [(ETAT.sujets || {}).sujets || [], [{cle: 'statut', label: 'statut'}, {cle: 'chantier', label: 'chantier'}]],
+      };
+      if (ongletActif === 'documents') {
+        let html = '';
+        for (const [dossier, fichiers] of Object.entries(DOCS)) {
+          if (!fichiers.length) continue;
+          html += `<h3 style="font-size:14px;margin:12px 0 6px">${ech(dossier)}</h3>
+            <table class="docs"><tr><th>Chemin</th><th>Taille</th></tr>`;
+          for (const f of fichiers) {
+            html += `<tr><td>${ech(f.chemin)}</td><td>${f.taille} o</td></tr>`;
+          }
+          html += '</table>';
+        }
+        c.innerHTML = html || '<p class="cout">Aucun document.</p>';
+        return;
+      }
+      const [liste, champs] = config[ongletActif] || [[], []];
+      const filtres = liste.filter(visible);
+      c.innerHTML = filtres.length
+        ? filtres.map(el => elementHtml(el, champs)).join('')
+        : '<p class="cout">Aucun élément' + (audience !== 'tout' ? ' pour l\'audience ' + audience : '') + '.</p>';
+    }
+
+    window.voirId = function (id) {
+      const prefixe = id.split('-')[0];
+      const map = { Q: 'questions', D: 'decisions', A: 'actions', R: 'risques', DEP: 'dependances', F: 'faits', J: 'jalons', REU: 'reunions', S: 'sujets', H: 'questions' };
+      ongletActif = map[prefixe] || ongletActif;
+      document.querySelectorAll('#onglets button[data-onglet]').forEach(b => b.classList.toggle('actif', b.dataset.onglet === ongletActif));
+      rendreOnglet();
+      const el = document.getElementById('el-' + id);
+      if (el) { el.classList.add('surligne'); el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+    };
+
+    document.querySelectorAll('#onglets button[data-onglet]').forEach(b => {
+      b.addEventListener('click', () => {
+        ongletActif = b.dataset.onglet;
+        document.querySelectorAll('#onglets button[data-onglet]').forEach(x => x.classList.toggle('actif', x === b));
+        rendreOnglet();
+      });
+    });
+    document.querySelectorAll('.filtres button[data-aud]').forEach(b => {
+      b.addEventListener('click', () => {
+        audience = b.dataset.aud;
+        document.querySelectorAll('.filtres button[data-aud]').forEach(x => x.classList.toggle('actif', x === b));
+        rendreOnglet();
+      });
+    });
+
+    charger();
+  </script>
+</body>
+</html>
