@@ -10,7 +10,7 @@ user-invocable: true
 2. **Appliquer**, avec l'origine « Chef de projet, conversation du <date du jour> » :
    - « clos A-xxx » : statut `faite`, date de clôture ;
    - « réponse à Q-xxx : … » : statut `repondue`, réponse, date. Si la réponse établit un fait, crée aussi un fait `F-xxx` lié à la question ;
-   - « nouveau risque / action / question / décision » : nouvel élément, audience `projet` sauf indication contraire ;
+   - « nouveau risque / action / question / décision » : nouvel élément, audience selon la règle d'attribution (voir P3) : `direction` si l'élément relève d'un arbitrage Direction/COPIL (budget, échéance, choix stratégique du fournisseur), `perso` si issu de notes personnelles, `public` si destiné à être communiqué à tous, `projet` sinon — sauf indication contraire du chef de projet ;
    - décalage d'un jalon : nouvelle date, ancienne date conservée dans `historique`. Signale les actions et réunions dont l'échéance dépasse désormais le jalon ;
    - « prépare REU-xx » : complète la fiche de la réunion dans `etat/reunions.json` (objectif, participants, ordre du jour, questions `Q-xxx` à poser, décisions attendues). Rédige `1_Perso/AAAA-MM-JJ_preparation_REU-xx.md` : points à obtenir, points de vigilance, questions dans l'ordre.
 3. **Valider.** `python outils/valider_etat.py`, puis corrige jusqu'au code retour 0.

@@ -29,7 +29,11 @@ La pré-analyse est terminée (`_amorcage/pre_analyse.json`, `pret_pour_creation
 
 ## Règles
 - Aucune information sans origine. En cas de doute, crée une question plutôt qu'un fait.
-- Les éléments issus de notes personnelles du chef de projet prennent l'audience `perso`. Tous les autres prennent `projet` par défaut.
+- Attribution de l'`audience` :
+  - `perso` : éléments issus de notes personnelles du chef de projet (jamais cités dans un livrable hors `1_Perso/`) ;
+  - `direction` : décisions, questions, risques et jalons qui relèvent d'un arbitrage de la Direction ou du COPIL (budget, échéance principale, choix stratégique du fournisseur) ;
+  - `public` : uniquement ce qui est destiné à être communiqué à l'ensemble des agents (calendrier de mise en service, communiqué) — jamais de données fournisseurs ni de détails internes ;
+  - `projet` : tout le reste, par défaut. En cas de doute, choisis l'audience la plus restreinte et signale-le.
 - Dates au format AAAA-MM-JJ dans les JSON.
 
 ## Réponse finale

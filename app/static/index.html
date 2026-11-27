@@ -4,32 +4,33 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Assistant chef de projet</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/css/app.css">
 </head>
 <body>
-  <header>
-    <h1>Assistant chef de projet</h1>
-  </header>
-  <main>
-    <div class="carte">
-      <h2>Nouveau projet</h2>
+  <div class="accueil">
+    <div class="hero" style="margin-bottom:22px">
+      <h2>Assistant chef de projet</h2>
+      <p>Décrivez votre projet, déposez vos documents, répondez aux questions : l'espace projet se crée et le pilotage commence.</p>
+    </div>
+    <div class="card" style="margin-bottom:22px">
+      <h3>Nouveau projet</h3>
       <form id="form-creation">
         <label for="nom">Nom du projet</label>
-        <input type="text" id="nom" name="nom" required placeholder="Migration de la messagerie">
+        <input type="text" id="nom" required placeholder="Migration de la messagerie">
         <label for="description">Décrivez votre projet</label>
-        <textarea id="description" name="description" required
-          placeholder="Objet, contexte, échéance, parties prenantes... tout ce que vous savez déjà."></textarea>
+        <textarea id="description" required placeholder="Objet, contexte, échéance, parties prenantes..."></textarea>
         <label for="fichiers">Documents (Word, PDF, PowerPoint, texte, Markdown)</label>
-        <input type="file" id="fichiers" name="fichiers" multiple>
-        <button type="submit" id="btn-creer">Lancer l'analyse</button>
+        <input type="file" id="fichiers" multiple>
+        <div style="margin-top:14px"><button type="submit" class="btn pri" id="btn-creer">Lancer l'analyse</button></div>
       </form>
       <div id="statut-creation"></div>
     </div>
-    <div class="carte">
-      <h2>Vos projets</h2>
-      <ul class="projet-liste" id="liste-projets"></ul>
+    <div class="card">
+      <h3>Vos projets</h3>
+      <ul class="plist" id="liste-projets"></ul>
     </div>
-  </main>
+  </div>
+  <div id="err"></div>
   <script>
     async function chargerProjets() {
       const r = await fetch('/api/projets');
@@ -37,22 +38,21 @@
       const ul = document.getElementById('liste-projets');
       ul.innerHTML = '';
       if (!data.projets.length) {
-        ul.innerHTML = '<li><span class="cout">Aucun projet pour l\'instant.</span></li>';
+        ul.innerHTML = '<li><span class="empty">Aucun projet pour l\'instant.</span></li>';
         return;
       }
       for (const p of data.projets) {
         const li = document.createElement('li');
-        li.innerHTML = `<a href="/projet/${p.id}">${p.nom || p.id}</a> <span class="badge">${p.etape}</span>`;
+        li.innerHTML = `<a href="/projet/${p.id}">${p.nom || p.id}</a> <span class="pill s-info"><b>${p.etape}</b></span>`;
         ul.appendChild(li);
       }
     }
-
     document.getElementById('form-creation').addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = document.getElementById('btn-creer');
       const statut = document.getElementById('statut-creation');
       btn.disabled = true;
-      statut.innerHTML = '<div class="spinner">Pré-analyse en cours (cela peut prendre quelques minutes)...</div>';
+      statut.innerHTML = '<div class="spinner">Pré-analyse en cours (quelques minutes)...</div>';
       const fd = new FormData();
       fd.append('nom', document.getElementById('nom').value);
       fd.append('description', document.getElementById('description').value);
@@ -67,7 +67,6 @@
         btn.disabled = false;
       }
     });
-
     chargerProjets();
   </script>
 </body>

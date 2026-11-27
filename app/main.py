@@ -19,7 +19,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from vibe_runner import run_vibe, RunOccupeError  # noqa: E402
+from vibe_runner import run_vibe, verrou_info, RunOccupeError  # noqa: E402
 
 APP = Path(__file__).resolve().parents[1]
 TEMPLATE = APP / "template_projet"
@@ -340,7 +340,7 @@ def chat(id_projet: str, body: ChatIn):
 @app.get("/api/projets/{id_projet}/chat")
 def historique_chat(id_projet: str):
     projet = projet_path(id_projet)
-    return {"messages": lire_chat(projet)}
+    return {"messages": lire_chat(projet), "run_en_cours": verrou_info(projet)}
 
 
 @app.get("/api/projets/{id_projet}/etat")
@@ -353,6 +353,20 @@ def etat_projet(id_projet: str):
 
 
 DOSSIERS_AUDIENCE = ["0_Entrants", "1_Perso", "2_Projet", "3_Direction", "4_Public"]
+
+
+@app.get("/api/projets/{id_projet}/document")
+def lire_document(id_projet: str, path: str):
+    """Renvoie le contenu texte d'un fichier du projet (pour le lecteur de documents).
+    Le chemin doit rester dans le dossier du projet."""
+    projet = projet_path(id_projet)
+    cible = (projet / path).resolve()
+    if not str(cible).startswith(str(projet)) or not cible.is_file():
+        raise HTTPException(404, "document introuvable dans le projet")
+    try:
+        return {"chemin": path, "contenu": cible.read_text(encoding="utf-8")}
+    except UnicodeDecodeError:
+        raise HTTPException(415, "fichier binaire, non lisible en texte")
 
 
 @app.get("/api/projets/{id_projet}/documents")
@@ -372,3 +386,4 @@ def documents_projet(id_projet: str):
                     })
         out[dossier] = fichiers
     return out
+

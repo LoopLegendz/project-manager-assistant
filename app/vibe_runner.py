@@ -26,6 +26,31 @@ def _lock_path(projet: Path) -> Path:
     return projet / "_runs" / ".lock"
 
 
+def verrou_info(projet: Path) -> dict | None:
+    """État du verrou du projet, sans le modifier : None si libre, sinon {pid, debut, age_s}."""
+    lock = _lock_path(Path(projet))
+    try:
+        contenu = lock.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        return None
+    pid = None
+    debut = None
+    for token in contenu.split():
+        if token.startswith("pid="):
+            pid = token[4:]
+        elif token.startswith("debut="):
+            try:
+                debut = float(token[6:])
+            except ValueError:
+                debut = None
+    if debut is None:
+        try:
+            debut = lock.stat().st_mtime
+        except OSError:
+            return None
+    return {"pid": pid, "debut": debut, "age_s": round(time.time() - debut, 1)}
+
+
 def _acquerir_lock(projet: Path, timeout_secondes: float = 120.0) -> Path | None:
     """Acquiert le verrou du projet (fichier .lock avec PID et timestamp). Retourne le chemin du lock ou None si occupé."""
     lock = _lock_path(projet)
